@@ -129,10 +129,10 @@ Welcome feedback, ideas, discussions, and collaboration from the monitoring and 
 
 ## Stay Connected
 
-* Website: luniobr.com
-* LinkedIn: luniobr
-* Instagram: @lunio.br
-* Contact: [hernandes.martins@luniobr.com](mailto:hernandes.martins@luniobr.com)
+- Website: <https://luniobr.com>
+- LinkedIn: <https://www.linkedin.com/company/luniobr>
+- Instagram: <https://www.instagram.com/lunio.br>
+- Contact: <hernandes.martins@luniobr.com>
 
 Community resources, discussion groups, issue tracking, and contribution guidelines will be published in future releases.
 

@@ -1,5 +1,12 @@
-<template>Dashboard</template>
+<template>
+  <div>
+    <TitlePage title="Dashboard" />
+  </div>
 
-<script setup></script>
+</template>
+
+<script setup>
+import TitlePage from '@/components/ui/TitlePage.vue'
+</script>
 
 <style></style>

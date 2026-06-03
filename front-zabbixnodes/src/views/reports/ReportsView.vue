@@ -1,5 +1,11 @@
-<template>reports</template>
+<template>
+  <div>
+    <TitlePage title="Relatórios" />
+  </div>
+</template>
 
-<script setup></script>
+<script setup>
+import TitlePage from '@/components/ui/TitlePage.vue'
+</script>
 
 <style></style>

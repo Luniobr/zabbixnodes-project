@@ -1,5 +1,11 @@
-<template>instances</template>
+<template>
+  <div>
+    <TitlePage title="Instâncias" />
+  </div>
+</template>
 
-<script setup></script>
+<script setup>
+import TitlePage from '@/components/ui/TitlePage.vue'
+</script>
 
 <style></style>

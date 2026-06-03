@@ -1,5 +1,11 @@
-<template>proxy</template>
+<template>
+  <div>
+    <TitlePage title="Proxies" />
+  </div>
+</template>
 
-<script setup></script>
+<script setup>
+import TitlePage from '@/components/ui/TitlePage.vue'
+</script>
 
 <style></style>

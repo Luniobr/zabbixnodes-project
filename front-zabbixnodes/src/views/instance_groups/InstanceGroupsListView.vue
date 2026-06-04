@@ -2,40 +2,10 @@
   <div>
     <!-- Header -->
     <div class="header">
-      <TitlePage title="Grupos de Hosts" />
-      <button
-        v-if="canWrite"
-        class="btn btn-primary btn-sm"
-        @click="openCreateModal"
-        :disabled="!selectedInstance"
-      >
+      <TitlePage title="Grupos de Instâncias" />
+      <button class="btn btn-primary btn-sm" @click="openCreate">
         + Novo Grupo
       </button>
-    </div>
-
-    <!-- Filters -->
-    <div class="filter-bar">
-      <label class="filter-label">Grupo de Instâncias:</label>
-      <select class="form-control filter-select" v-model="selectedInstanceGroup" @change="onInstanceGroupChange">
-        <option value="">— Selecione —</option>
-        <option v-for="g in instanceGroups" :key="g.id" :value="g.id">{{ g.name }}</option>
-      </select>
-
-      <template v-if="selectedInstanceGroup">
-        <label class="filter-label">Instância:</label>
-        <select class="form-control filter-select" v-model="selectedInstance" @change="loadGroups">
-          <option value="">— Selecione —</option>
-          <option v-for="inst in filteredInstances" :key="inst.id" :value="inst.id">{{ inst.name }}</option>
-        </select>
-      </template>
-
-      <input
-        v-if="selectedInstance"
-        type="text"
-        class="form-control filter-search"
-        v-model="searchGroup"
-        placeholder="Pesquisar grupo..."
-      />
     </div>
 
     <!-- Error -->
@@ -53,31 +23,41 @@
       <table>
         <thead>
           <tr>
-            <th>ID</th>
+            <th style="width: 16px"></th>
             <th>Nome</th>
-            <th>Ações</th>
+            <th>Descrição</th>
+            <th style="width: 100px; text-align: center">Instâncias</th>
+            <th style="width: 120px">Ações</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-if="!selectedInstanceGroup">
-            <td colspan="3" class="table-empty">Selecione um grupo de instâncias para começar</td>
+          <tr v-if="loading">
+            <td colspan="5" class="table-empty">Carregando...</td>
           </tr>
-          <tr v-else-if="!selectedInstance">
-            <td colspan="3" class="table-empty">Selecione uma instância</td>
+          <tr v-else-if="groups.length === 0">
+            <td colspan="5" class="table-empty">Nenhum grupo cadastrado</td>
           </tr>
-          <tr v-else-if="loading">
-            <td colspan="3" class="table-empty">Carregando...</td>
-          </tr>
-          <tr v-else-if="filteredGroups.length === 0">
-            <td colspan="3" class="table-empty">Nenhum grupo encontrado</td>
-          </tr>
-          <tr v-for="g in filteredGroups" :key="g.groupid">
-            <td class="text-muted text-sm">{{ g.groupid }}</td>
-            <td><strong>{{ g.name }}</strong></td>
+          <tr v-for="g in groups" :key="g.id">
             <td>
-              <div class="actions" v-if="canWrite">
-                <button class="btn btn-secondary btn-sm btn-icon" title="Editar" @click="openEditModal(g)">✏️</button>
-                <button class="btn btn-danger btn-sm btn-icon" title="Deletar" @click="confirmDelete(g)">🗑</button>
+              <div
+                class="color-dot"
+                :style="g.color ? `background: ${g.color}` : 'background: var(--border)'"
+              ></div>
+            </td>
+            <td><strong>{{ g.name }}</strong></td>
+            <td class="text-sm text-muted">{{ g.description || '—' }}</td>
+            <td style="text-align: center">
+              <span class="badge">{{ instanceCount(g.id) }}</span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-secondary btn-sm btn-icon" title="Editar" @click="openEdit(g)">✏️</button>
+                <button
+                  class="btn btn-danger btn-sm btn-icon"
+                  title="Excluir"
+                  @click="confirmDelete(g)"
+                  :disabled="instanceCount(g.id) > 0"
+                >🗑</button>
               </div>
             </td>
           </tr>
@@ -87,25 +67,39 @@
 
     <!-- Create Modal -->
     <Transition name="fade">
-      <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
+      <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false; createError = ''">
         <div class="modal">
           <div class="modal-title">Novo Grupo</div>
           <div v-if="createError" class="alert alert-error">{{ createError }}</div>
+
           <div class="form-group">
             <label class="form-label">Nome *</label>
             <input
               type="text"
               class="form-control"
-              v-model="newName"
-              placeholder="Linux Servers"
+              v-model="form.name"
+              placeholder="Ex: Clientes, Produção, Região Sul"
               ref="createInputRef"
             />
           </div>
+          <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <input type="text" class="form-control" v-model="form.description" placeholder="Descrição opcional" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cor de identificação</label>
+            <div class="color-picker-row">
+              <input type="color" v-model="form.color" class="color-input" />
+              <span class="text-sm text-muted">{{ form.color || 'Nenhuma cor' }}</span>
+              <button v-if="form.color" class="btn btn-secondary btn-sm" @click="form.color = ''">✕ Remover</button>
+            </div>
+          </div>
+
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="showCreateModal = false; createError = ''">Cancelar</button>
-            <button class="btn btn-primary" @click="createGroup" :disabled="creating">
+            <button class="btn btn-primary" @click="doCreate" :disabled="creating">
               <span v-if="creating" class="spinner"></span>
-              Criar
+              Criar Grupo
             </button>
           </div>
         </div>
@@ -114,17 +108,32 @@
 
     <!-- Edit Modal -->
     <Transition name="fade">
-      <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
+      <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false; editError = ''">
         <div class="modal">
-          <div class="modal-title">Editar Grupo</div>
+          <div class="modal-title">Editar Grupo — {{ editTarget?.name }}</div>
           <div v-if="editError" class="alert alert-error">{{ editError }}</div>
+
           <div class="form-group">
             <label class="form-label">Nome *</label>
-            <input type="text" class="form-control" v-model="editName" />
+            <input type="text" class="form-control" v-model="form.name" />
           </div>
+          <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <input type="text" class="form-control" v-model="form.description" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cor de identificação</label>
+            <div class="color-picker-row">
+              <input type="color" v-model="form.color" class="color-input" />
+              <span class="text-sm text-muted">{{ form.color || 'Nenhuma cor' }}</span>
+              <button v-if="form.color" class="btn btn-secondary btn-sm" @click="form.color = ''">✕ Remover</button>
+            </div>
+          </div>
+
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="showEditModal = false; editError = ''">Cancelar</button>
-            <button class="btn btn-primary" @click="saveEdit" :disabled="saving">
+            <button class="btn btn-secondary" title="Clonar este grupo" @click="cloneFromEdit">⧉ Clonar</button>
+            <button class="btn btn-primary" @click="doEdit" :disabled="saving">
               <span v-if="saving" class="spinner"></span>
               Salvar
             </button>
@@ -140,7 +149,7 @@
           <div class="modal-title">Confirmar exclusão</div>
           <p>Excluir o grupo <strong>{{ deleteTarget.name }}</strong>?</p>
           <p class="text-muted text-sm" style="margin-top: 8px">
-            Grupos com hosts associados não podem ser excluídos.
+            As instâncias vinculadas ficarão sem grupo.
           </p>
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="deleteTarget = null">Cancelar</button>
@@ -156,29 +165,23 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useApi } from '@/composables/useApi'
 import TitlePage from '@/components/ui/TitlePage.vue'
 
-const route = useRoute()
 const { client } = useApi()
 
 // State
-const instanceGroups = ref([])
-const instances = ref([])
-const filteredInstances = ref([])
-const selectedInstanceGroup = ref('')
-const selectedInstance = ref('')
 const groups = ref([])
-const searchGroup = ref('')
-const canWrite = ref(false)
+const instances = ref([])
 const loading = ref(false)
 const error = ref('')
 
+// Form compartilhado entre criar e editar
+const form = ref({ name: '', description: '', color: '#3b82f6' })
+
 // Create modal
 const showCreateModal = ref(false)
-const newName = ref('')
 const creating = ref(false)
 const createError = ref('')
 const createInputRef = ref(null)
@@ -186,7 +189,6 @@ const createInputRef = ref(null)
 // Edit modal
 const showEditModal = ref(false)
 const editTarget = ref(null)
-const editName = ref('')
 const saving = ref(false)
 const editError = ref('')
 
@@ -206,86 +208,44 @@ function showToast(message, type = 'success') {
   toastTimer = setTimeout(() => { toast.visible = false }, 3500)
 }
 
-const filteredGroups = computed(() => {
-  if (!searchGroup.value) return groups.value
-  const q = searchGroup.value.toLowerCase()
-  return groups.value.filter((g) => g.name.toLowerCase().includes(q))
-})
+function instanceCount(groupId) {
+  return instances.value.filter((i) => i.group && i.group.id === groupId).length
+}
 
 async function init() {
+  loading.value = true
   try {
     const [groupsRes, instancesRes] = await Promise.all([
       client.get('/instance-groups'),
       client.get('/instances'),
     ])
-    instanceGroups.value = groupsRes.data
+    groups.value = groupsRes.data
     instances.value = instancesRes.data
-
-    // Lê instance_id da query string (ex: vindo do dashboard)
-    const instanceIdFromUrl = route.query.instance_id
-    if (instanceIdFromUrl) {
-      const inst = instances.value.find((i) => String(i.id) === String(instanceIdFromUrl))
-      if (inst?.group) {
-        selectedInstanceGroup.value = inst.group.id
-        filteredInstances.value = instances.value.filter(
-          (i) => i.group && String(i.group.id) === String(inst.group.id)
-        )
-      }
-      selectedInstance.value = instanceIdFromUrl
-      await loadGroups()
-    }
   } catch (e) {
     error.value = e?.response?.data?.detail || e?.message || 'Erro ao carregar dados'
-  }
-}
-
-function onInstanceGroupChange() {
-  selectedInstance.value = ''
-  groups.value = []
-  searchGroup.value = ''
-  filteredInstances.value = instances.value.filter(
-    (i) => i.group && String(i.group.id) === String(selectedInstanceGroup.value)
-  )
-}
-
-async function loadGroups() {
-  if (!selectedInstance.value) { groups.value = []; return }
-  loading.value = true
-  error.value = ''
-  try {
-    const { data } = await client.get('/host-groups', {
-      params: { instance_id: selectedInstance.value },
-    })
-    groups.value = data
-    const inst = instances.value.find((i) => String(i.id) === String(selectedInstance.value))
-    canWrite.value = inst?.can_write ?? false
-  } catch (e) {
-    error.value = e?.response?.data?.detail || e?.message || 'Erro ao carregar grupos'
   } finally {
     loading.value = false
   }
 }
 
-async function openCreateModal() {
-  newName.value = ''
+async function openCreate() {
+  form.value = { name: '', description: '', color: '#3b82f6' }
   createError.value = ''
   showCreateModal.value = true
   await nextTick()
   createInputRef.value?.focus()
 }
 
-async function createGroup() {
-  if (!newName.value.trim()) return
+async function doCreate() {
+  if (!form.value.name) { createError.value = 'Nome é obrigatório.'; return }
   creating.value = true
   createError.value = ''
   try {
-    await client.post('/host-groups', {
-      instance_id: selectedInstance.value,
-      name: newName.value.trim(),
-    })
+    const { data } = await client.post('/instance-groups', form.value)
+    groups.value.push(data)
+    groups.value.sort((a, b) => a.name.localeCompare(b.name))
+    showToast('Grupo criado', 'success')
     showCreateModal.value = false
-    showToast('Grupo criado com sucesso', 'success')
-    await loadGroups()
   } catch (e) {
     createError.value = e?.response?.data?.detail || e?.message || 'Erro ao criar grupo'
   } finally {
@@ -293,23 +253,20 @@ async function createGroup() {
   }
 }
 
-function openEditModal(g) {
+function openEdit(g) {
   editTarget.value = g
-  editName.value = g.name
+  form.value = { name: g.name, description: g.description || '', color: g.color || '' }
   editError.value = ''
   showEditModal.value = true
 }
 
-async function saveEdit() {
-  if (!editName.value.trim()) return
+async function doEdit() {
+  if (!form.value.name) { editError.value = 'Nome é obrigatório.'; return }
   saving.value = true
   editError.value = ''
   try {
-    await client.put(`/host-groups/${editTarget.value.groupid}`, {
-      instance_id: selectedInstance.value,
-      name: editName.value.trim(),
-    })
-    editTarget.value.name = editName.value.trim()
+    const { data } = await client.put(`/instance-groups/${editTarget.value.id}`, form.value)
+    Object.assign(editTarget.value, data)
     showToast('Grupo atualizado', 'success')
     showEditModal.value = false
   } catch (e) {
@@ -319,6 +276,19 @@ async function saveEdit() {
   }
 }
 
+function cloneFromEdit() {
+  const source = editTarget.value
+  showEditModal.value = false
+  editError.value = ''
+  form.value = {
+    name: `Cópia de ${source.name}`,
+    description: source.description || '',
+    color: source.color || '',
+  }
+  createError.value = ''
+  showCreateModal.value = true
+}
+
 function confirmDelete(g) {
   deleteTarget.value = g
 }
@@ -326,15 +296,12 @@ function confirmDelete(g) {
 async function doDelete() {
   deleting.value = true
   try {
-    await client.delete(`/host-groups/${deleteTarget.value.groupid}`, {
-      params: { instance_id: selectedInstance.value },
-    })
-    groups.value = groups.value.filter((g) => g.groupid !== deleteTarget.value.groupid)
+    await client.delete(`/instance-groups/${deleteTarget.value.id}`)
+    groups.value = groups.value.filter((g) => g.id !== deleteTarget.value.id)
     showToast('Grupo excluído', 'success')
     deleteTarget.value = null
   } catch (e) {
     showToast(e?.response?.data?.detail || e?.message || 'Erro ao excluir grupo', 'error')
-    deleteTarget.value = null
   } finally {
     deleting.value = false
   }
@@ -349,40 +316,6 @@ onMounted(init)
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
-}
-
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 20px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.filter-label {
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.filter-select { width: 200px; }
-.filter-search { width: 200px; margin-left: auto; }
-
-.form-control {
-  padding: 7px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 14px;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--primary, #d40000);
 }
 
 .alert {
@@ -438,8 +371,24 @@ tr:hover td { background: var(--bg-hover); }
   color: var(--text-muted);
 }
 
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .text-sm { font-size: 12px; }
 .text-muted { color: var(--text-muted); }
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
 
 .actions { display: flex; gap: 8px; align-items: center; }
 
@@ -508,7 +457,7 @@ tr:hover td { background: var(--bg-hover); }
   border-radius: 10px;
   padding: 24px;
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
 }
 
 .modal-title {
@@ -524,6 +473,38 @@ tr:hover td { background: var(--bg-hover); }
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 6px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary, #d40000);
+}
+
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-input {
+  width: 48px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--card-bg);
 }
 
 .modal-footer {

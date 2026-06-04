@@ -55,7 +55,7 @@
             <td colspan="7" class="table-empty">
               Nenhuma instância encontrada.
               <router-link
-                v-if="isSuperadmin && !selectedGroup && !search"
+
                 to="/instances/new"
               >Adicionar primeira instância</router-link>
             </td>
@@ -96,23 +96,21 @@
                   <span v-if="testing === inst.id" class="spinner"></span>
                   <span v-else>⚡</span>
                 </button>
-                <template v-if="isSuperadmin">
-                  <router-link
-                    :to="`/instances/${inst.id}/edit`"
-                    class="btn btn-secondary btn-sm btn-icon"
-                    title="Editar"
-                  >✏️</router-link>
-                  <button
-                    class="btn btn-secondary btn-sm btn-icon"
-                    :title="inst.is_active ? 'Desativar' : 'Ativar'"
-                    @click="toggle(inst)"
-                  >{{ inst.is_active ? '⏸' : '▶' }}</button>
-                  <button
-                    class="btn btn-danger btn-sm btn-icon"
-                    title="Deletar"
-                    @click="confirmDelete(inst)"
-                  >🗑</button>
-                </template>
+                <router-link
+                  :to="`/instances/${inst.id}/edit`"
+                  class="btn btn-secondary btn-sm btn-icon"
+                  title="Editar"
+                >✏️</router-link>
+                <button
+                  class="btn btn-secondary btn-sm btn-icon"
+                  :title="inst.is_active ? 'Desativar' : 'Ativar'"
+                  @click="toggle(inst)"
+                >{{ inst.is_active ? '⏸' : '▶' }}</button>
+                <button
+                  class="btn btn-danger btn-sm btn-icon"
+                  title="Deletar"
+                  @click="confirmDelete(inst)"
+                >🗑</button>
               </div>
             </td>
           </tr>

@@ -25,6 +25,16 @@ const router = createRouter({
           component: () => import('@/views/instances/InstancesListView.vue'),
         },
         {
+          path: 'instances/new',
+          name: 'instance-new',
+          component: () => import('@/views/instances/InstanceFormView.vue'),
+        },
+        {
+          path: 'instances/:id/edit',
+          name: 'instance-edit',
+          component: () => import('@/views/instances/InstanceFormView.vue'),
+        },
+        {
           path: 'instance-groups',
           name: 'instance-groups',
           component: () => import('@/views/instance_groups/InstanceGroupsListView.vue'),

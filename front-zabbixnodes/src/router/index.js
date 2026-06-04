@@ -45,6 +45,11 @@ const router = createRouter({
           component: () => import('@/views/hosts/HostsListView.vue'),
         },
         {
+          path: 'items',
+          name: 'items',
+          component: () => import('@/views/items/ItemsListView.vue'),
+        },
+        {
           path: 'host-groups',
           name: 'host-groups',
           component: () => import('@/views/host_groups/HostGroupsListView.vue'),

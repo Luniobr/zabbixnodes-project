@@ -1,0 +1,24 @@
+# Contexto de build na raiz (usado pelo Dockerfile.docs)
+.git
+.gitignore
+
+# Saída de build da documentação
+site/
+
+# Subprojetos (têm seus próprios build contexts)
+**/node_modules
+**/.venv
+**/dist
+
+# Python
+**/__pycache__
+**/*.py[cod]
+
+# Ambiente / segredos
+**/.env
+**/.env.*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

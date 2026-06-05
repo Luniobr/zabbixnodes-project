@@ -1,0 +1,22 @@
+# docker build -f Dockerfile.docs -t registry.lunioit.com/zabbixnodes-docs:vue-dev . && docker push registry.lunioit.com/zabbixnodes-docs:vue-dev
+
+# Stage 1: Build da documentação (MkDocs)
+FROM python:3.13-slim AS builder
+
+WORKDIR /docs
+
+# Versão pinada: MkDocs 2.0 (futuro) quebra compatibilidade do Material
+RUN pip install --no-cache-dir mkdocs-material==9.7.6
+
+COPY mkdocs.yml .
+COPY docs/ docs/
+
+# --strict: falha o build se houver link quebrado ou página fora da nav
+RUN mkdocs build --strict
+
+# Stage 2: Servir o site estático com Nginx
+FROM nginx:alpine
+
+COPY --from=builder /docs/site /usr/share/nginx/html
+
+EXPOSE 80

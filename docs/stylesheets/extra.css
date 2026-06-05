@@ -1,0 +1,12 @@
+/* Cor primária da marca Lunio (#d40000) sobrepondo o tema Material */
+:root {
+  --md-primary-fg-color: #d40000;
+  --md-primary-fg-color--light: #e23b3b;
+  --md-primary-fg-color--dark: #a30000;
+  --md-accent-fg-color: #d40000;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #d40000;
+  --md-accent-fg-color: #ff5252;
+}

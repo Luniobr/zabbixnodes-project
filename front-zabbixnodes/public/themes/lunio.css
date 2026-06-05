@@ -1,0 +1,54 @@
+:root {
+  --primary: #0099cc;
+  --primary-dark: #007aa3;
+  --primary-light: #00b8e6;
+  --sidebar-bg: #0d1b2e;
+  --sidebar-text: #90aec8;
+  --sidebar-active: #00b8e6;
+  --sidebar-hover: rgba(0,184,230,0.08);
+  --topbar-bg: #0a1628;
+  --topbar-text: #d0e4f5;
+  --bg: #eef4f9;
+  --surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-secondary: #deeaf5;
+  --border: #b8d4e8;
+  --text: #0d1b2e;
+  --text-muted: #4a6a85;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #0099cc;
+  --shadow: 0 1px 3px rgba(0,0,0,0.10);
+  --radius: 6px;
+}
+
+body { background: var(--bg); }
+
+.topbar-brand span { color: #6b2dff; }
+
+.sidebar-link.active {
+  color: #00b8e6;
+  background: rgba(0,184,230,0.10);
+  border-left: 3px solid #00b8e6;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0099cc, #6b2dff);
+  border-color: transparent;
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #00b8e6, #8b4dff);
+  border-color: transparent;
+}
+
+thead tr { background: #deeaf5; }
+tbody tr:hover { background: #eef4f9; }
+
+.form-control:focus {
+  border-color: #0099cc;
+  box-shadow: 0 0 0 2px rgba(0,153,204,0.2);
+}
+
+.card { border: 1px solid #b8d4e8; }

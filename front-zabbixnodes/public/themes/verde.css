@@ -1,0 +1,54 @@
+:root {
+  --primary: #00a650;
+  --primary-dark: #007a3a;
+  --primary-light: #00cc63;
+  --sidebar-bg: #1a2e1a;
+  --sidebar-text: #a8c8a8;
+  --sidebar-active: #00a650;
+  --sidebar-hover: rgba(0,166,80,0.10);
+  --topbar-bg: #0d1f0d;
+  --topbar-text: #e8f5e8;
+  --bg: #f0f5f0;
+  --surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-secondary: #e8f2e8;
+  --border: #b8d8b8;
+  --text: #1a2e1a;
+  --text-muted: #4a6a4a;
+  --success: #00a650;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #0ea5e9;
+  --shadow: 0 1px 3px rgba(0,0,0,0.12);
+  --radius: 6px;
+}
+
+body { background: var(--bg); }
+
+.topbar-brand span { color: #00cc63; }
+
+.sidebar-link.active {
+  color: #00a650;
+  background: rgba(0,166,80,0.12);
+  border-left: 3px solid #00a650;
+}
+
+.btn-primary {
+  background: #00a650;
+  border-color: #007a3a;
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background: #007a3a;
+  border-color: #005a2a;
+}
+
+thead tr { background: #d4ead4; }
+tbody tr:hover { background: #e8f2e8; }
+
+.form-control:focus {
+  border-color: #00a650;
+  box-shadow: 0 0 0 2px rgba(0,166,80,0.2);
+}
+
+.card { border: 1px solid #b8d8b8; }

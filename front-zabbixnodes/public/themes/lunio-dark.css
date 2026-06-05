@@ -1,0 +1,64 @@
+:root {
+  --primary: #00c4ef;
+  --primary-dark: #009bbf;
+  --primary-light: #33d0f5;
+  --sidebar-bg: #111827;
+  --sidebar-text: #94a3b8;
+  --sidebar-active: #00c4ef;
+  --sidebar-hover: rgba(0,196,239,0.08);
+  --topbar-bg: #0f172a;
+  --topbar-text: #cbd5e1;
+  --bg: #1e293b;
+  --surface: #273449;
+  --bg-card: #273449;
+  --bg-secondary: #2f3f57;
+  --border: #3b4f6b;
+  --text: #e2e8f0;
+  --text-muted: #7b90a8;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #00c4ef;
+  --shadow: 0 1px 3px rgba(0,0,0,0.35);
+  --radius: 6px;
+}
+
+body { background: var(--bg); }
+
+.topbar-brand span { color: #7c3aff; }
+
+.sidebar-link.active {
+  color: #00c4ef;
+  background: rgba(0,196,239,0.10);
+  border-left: 3px solid #00c4ef;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00c4ef, #7c3aff);
+  border-color: transparent;
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #33d0f5, #9b5aff);
+  border-color: transparent;
+}
+
+thead tr { background: #2f3f57; }
+tbody tr:hover { background: #2a3a52; }
+
+.form-control {
+  background: #2f3f57;
+  border-color: #3b4f6b;
+  color: var(--text);
+}
+.form-control:focus {
+  border-color: #00c4ef;
+  box-shadow: 0 0 0 2px rgba(0,196,239,0.2);
+}
+
+.card { border: 1px solid #3b4f6b; }
+
+select option { background: #2f3f57; color: var(--text); }
+
+.btn-secondary { background: #2f3f57; color: #e2e8f0; border-color: #3b4f6b; }
+.btn-secondary:hover { background: #3a4f6a; }

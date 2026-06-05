@@ -32,9 +32,23 @@ def decode_access_token(token: str) -> dict:
 
 
 def _get_aes_key() -> bytes:
-    key_hex = settings.ENCRYPTION_KEY
-    key_bytes = bytes.fromhex(key_hex)
+    raw = settings.ENCRYPTION_KEY.strip()
+    # Aceita a ENCRYPTION_KEY em hexadecimal (64 chars) ou base64 (32 bytes).
+    try:
+        key_bytes = bytes.fromhex(raw)
+    except ValueError:
+        try:
+            key_bytes = base64.b64decode(raw, validate=True)
+        except ValueError as exc:
+            raise ValueError(
+                "ENCRYPTION_KEY inválida: use hexadecimal (64 chars) ou base64 de 32 bytes."
+            ) from exc
     # AES-256 needs exactly 32 bytes
+    if len(key_bytes) < 32:
+        raise ValueError(
+            f"ENCRYPTION_KEY precisa de pelo menos 32 bytes para AES-256; "
+            f"recebido {len(key_bytes)} byte(s)."
+        )
     return key_bytes[:32]
 
 

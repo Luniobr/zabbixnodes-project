@@ -1,0 +1,113 @@
+version: '3.8'
+
+# ============================================
+# ZabbixNodes - Stack Completo (Frontend + Backend + DB)
+# ============================================
+
+services:
+  # PostgreSQL - Banco de dados compartilhado
+  db:
+    image: postgres:16-alpine
+    container_name: zabbixnodes-db
+    environment:
+      POSTGRES_USER: zabbixnodes
+      POSTGRES_PASSWORD: Pr0vt3l*
+      POSTGRES_DB: zabbixnodes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zabbixnodes-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zabbixnodes -d zabbixnodes"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # Backend FastAPI
+  api:
+    image: registry.lunioit.com/zabbixnodes-backend:vue-dev
+    container_name: zabbixnodes-api
+    build:
+      context: ./back-zabbixnodes
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      # Database - Use o hostname do container PostgreSQL
+      DATABASE_URL: postgresql+asyncpg://zabbixnodes:Pr0vt3l*@db:5432/zabbixnodes
+
+      # Security
+      SECRET_KEY: 81059e12ac3b792131a9a7cca42c7130fede9c900c481b9b868725af82e30df6226f21900ccee55debfd81057301eff60b6522b01357def98bb82cdc3797b3db
+      ENCRYPTION_KEY: qtoV+YhHjdFXOJEK+m46j8jrDn9pSMXcPenR9xxFiZs=
+
+      # Admin credentials
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: Pr0vt3l*
+
+      # API Configuration
+      JWT_EXPIRATION_HOURS: 8
+      ZABBIX_TIMEOUT_SECONDS: 10
+      API_RATE_LIMIT: 60
+      ALLOWED_ORIGINS: "http://142.93.116.237,http://localhost,http://127.0.0.1"
+
+      # Application
+      DEBUG: "False"
+      LOG_LEVEL: info
+      WORKERS: "4"
+      PORT: "8000"
+      HOST: "0.0.0.0"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - zabbixnodes-net
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    restart: unless-stopped
+
+  # Frontend Vue.js
+  frontend:
+    image: registry.lunioit.com/zabbixnodes-frontend:vue-dev
+    container_name: zabbixnodes-frontend
+    build:
+      context: ./front-zabbixnodes
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_BASE_URL: "http://142.93.116.237:8001/api/v1"
+
+    depends_on:
+      - api
+
+    networks:
+      - zabbixnodes-net
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  zabbixnodes-net:
+    driver: bridge

@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zabbixnodes-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: zabbixnodes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zabbixnodes
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zabbixnodes-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:dev@postgres:5432/zabbixnodes
+      SECRET_KEY: your-secret-key-change-in-production-min-32-chars-long!!
+      ADMIN_PASSWORD: admin123
+      ENCRYPTION_KEY: dc793222263d62730c11634a476f0079
+      ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000
+      API_RATE_LIMIT: "100"
+      DEBUG: "False"
+      ENVIRONMENT: development
+      LOG_LEVEL: info
+      WORKERS: "4"
+      PORT: "8000"
+      HOST: "0.0.0.0"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Montagem em tempo de desenvolvimento
+      - .:/app
+    networks:
+      - zabbixnodes
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  zabbixnodes:
+    driver: bridge

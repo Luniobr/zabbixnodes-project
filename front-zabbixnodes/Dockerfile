@@ -20,9 +20,6 @@ RUN npm run build
 # Stage 2: Production
 FROM nginx:alpine
 
-# Instalar bash e utilitários necessários
-RUN apk add --no-cache
-
 # Definir diretório de trabalho
 WORKDIR /app
 
@@ -35,10 +32,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copiar script de entrypoint
 COPY docker-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost/health || exit 1
 
 # Variáveis de ambiente padrão
 ENV VITE_API_BASE_URL=http://142.93.116.237:8001/api/v1
